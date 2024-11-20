@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement style="flex-grow: 1; align-items: center; justify-content: space-between; align-self: stretch; flex-direction: row;">
+        <ui:Label tabindex="-1" text="Device name" parse-escape-sequences="true" display-tooltip-when-elided="true" name="device-name" style="left: auto; align-items: flex-start; align-self: flex-start; flex-direction: row-reverse;" />
+        <ui:Label tabindex="-1" text="Connecting..." parse-escape-sequences="true" display-tooltip-when-elided="true" name="connecting-label" style="align-items: stretch; align-self: flex-start; -unity-text-align: upper-left; flex-direction: column; white-space: normal; text-overflow: clip; flex-basis: auto; justify-content: center; transition-property: opacity; transition-duration: 1s;" />
+    </ui:VisualElement>
+</ui:UXML>
