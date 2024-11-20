@@ -102,19 +102,20 @@ public class MainWindowController : MonoBehaviour
         brainBitController.EventArtefactFounded += eventArtefactFounded;
     }
 
+    private void StopCalculationsMessage(ClickEvent evt)
+    {
+        brainBitController.EventCalibrationProgressChanged -= eventCalibrationProgressChanged;
+        brainBitController.EventMindDataUpdated -= eventMindDataUpdated;
+        brainBitController.EventArtefactFounded -= eventArtefactFounded;
+        brainBitController.StopCalculations(brainBitController.ConnectedDevices[0]);
+    }
+
     private void eventArtefactFounded(string address, bool artefacted)
     {
         if (brainBitController.ConnectedDevices[0] == address)
         {
             vKeeper.SetArtefacts(artefacted);
         }
-    }
-
-    private void StopCalculationsMessage(ClickEvent evt)
-    {
-        brainBitController.EventCalibrationProgressChanged -= eventCalibrationProgressChanged;
-        brainBitController.EventMindDataUpdated -= eventMindDataUpdated;
-        brainBitController.StopCalculations(brainBitController.ConnectedDevices[0]);
     }
 
     private void eventMindDataUpdated(string address, MindDataReal mindData)
