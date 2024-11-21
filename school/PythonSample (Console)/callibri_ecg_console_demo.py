@@ -1,8 +1,8 @@
 import queue
+import time
 from threading import Thread
 from typing import List
 
-from PyQt6.QtCore import QObject, pyqtSignal, QThread
 from neurosdk.callibri_sensor import CallibriSensor
 from neurosdk.scanner import Scanner
 from neurosdk.sensor import Sensor
@@ -36,24 +36,12 @@ class CallibriAdditional:
         self.signal_data = queue.Queue()
 
 
-class Worker(QObject):
-    finished = pyqtSignal()
-
-    def __init__(self, work):
-        super().__init__()
-        self.work = work
-
-    def run(self):
-        self.work()
-        self.finished.emit()
-
-
-class CallibriController(QObject):
-    connectionStateChanged = pyqtSignal(str, ConnectionState)
-    batteryChanged = pyqtSignal(str, int)
-    hrValuesUpdated = pyqtSignal(str, float)
-    hasRRPicks = pyqtSignal(str, bool)
-    foundedDevices = pyqtSignal(list)
+class CallibriController:
+    connectionStateChanged = None
+    batteryChanged = None
+    hrValuesUpdated = None
+    hasRRPicks = None
+    foundedDevices = None
 
     def __init__(self):
         super().__init__()
@@ -61,13 +49,11 @@ class CallibriController(QObject):
         self.__connected_devices = {}
         self.__disconnected_devices = list()
         self.connected_devices = list()
-        self.thread = None
-        self.worker = None
 
     def search_with_result(self, seconds: int, addresses: List[str]):
         def __device_scan():
             self.__scanner.start()
-            QThread.sleep(seconds)
+            time.sleep(seconds)
             self.__scanner.stop()
             founded = self.__scanner.sensors()
             filtered_sensors = []
@@ -76,17 +62,15 @@ class CallibriController(QObject):
                     filtered_sensors.append(CallibriInfo(Name=si.Name,
                                                          Address=si.Address,
                                                          sensor_info=si))
-            self.foundedDevices.emit(filtered_sensors)
+            if self.foundedDevices is not None:
+                self.foundedDevices(filtered_sensors)
 
-        self.thread = QThread()
-        self.worker = Worker(__device_scan)
-        self.worker.moveToThread(self.thread)
-        self.thread.started.connect(self.worker.run)
-        self.worker.finished.connect(self.thread.quit)
-        self.thread.start()
+        thread = Thread(target=__device_scan)
+        thread.start()
 
     def connect_to(self, info: CallibriInfo, need_reconnect: bool = False):
-        self.connectionStateChanged.emit(info.Address, ConnectionState.Connection)
+        if self.connectionStateChanged is not None:
+            self.connectionStateChanged(info.Address, ConnectionState.Connection)
 
         def __device_connection():
             sensor = None
@@ -105,18 +89,16 @@ class CallibriController(QObject):
                     sensor.batteryChanged = self.__battery_changed
                     self.__connected_devices.update({info.Address: CallibriAdditional(need_reconnect, sensor)})
                     self.connected_devices.append(info.Address)
-                    self.connectionStateChanged.emit(info.Address, ConnectionState.Connected)
+                    if self.connectionStateChanged is not None:
+                        self.connectionStateChanged(info.Address, ConnectionState.Connected)
                 else:
-                    self.connectionStateChanged.emit(info.Address, ConnectionState.Error)
+                    if self.connectionStateChanged is not None:
+                        self.connectionStateChanged(info.Address, ConnectionState.Error)
             except Exception as err:
                 print(err)
 
-        self.thread = QThread()
-        self.worker = Worker(__device_connection)
-        self.worker.moveToThread(self.thread)
-        self.thread.started.connect(self.worker.run)
-        self.worker.finished.connect(self.thread.quit)
-        self.thread.start()
+        thread = Thread(target=__device_connection)
+        thread.start()
 
     def __event_sensor_founded(self, scanner: Scanner, sensors: List[SensorInfo]):
         scanner.stop()
@@ -134,7 +116,8 @@ class CallibriController(QObject):
             scanner.start()
 
     def __connection_state_changed(self, sensor: Sensor, state: SensorState):
-        self.connectionStateChanged.emit(sensor.address,
+        if self.connectionStateChanged is not None:
+            self.connectionStateChanged(sensor.address,
                                          ConnectionState.Connected if state == SensorState.StateInRange else ConnectionState.Disconnected)
         if state == SensorState.StateOutOfRange and sensor.address in self.__connected_devices.keys() and self.__connected_devices[
             sensor.address].need_reconnect:
@@ -143,12 +126,14 @@ class CallibriController(QObject):
             self.__scanner.start()
 
     def __battery_changed(self, sensor: Sensor, battery: int):
-        self.batteryChanged.emit(sensor.address, battery)
+        if self.batteryChanged is not None:
+            self.batteryChanged(sensor.address, battery)
 
     def disconnect_from(self, address: str):
-        self.connectionStateChanged.emit(address, ConnectionState.Disconnection)
+        if self.connectionStateChanged is not None:
+            self.connectionStateChanged(address, ConnectionState.Disconnection)
         if address in self.__disconnected_devices:
-            self.__disconnected_devices.remove(info)
+            self.__disconnected_devices.remove(address)
             if len(self.__disconnected_devices) < 1:
                 self.__scanner.stop()
         sens = self.__connected_devices[address]
@@ -172,10 +157,11 @@ class CallibriController(QObject):
                     math.push_data(raw_data)
                     math.process_data_arr()
                     rr_detected = math.rr_detected()
-                    self.hasRRPicks.emit(sensor.address, rr_detected)
+                    if self.hasRRPicks is not None:
+                        self.hasRRPicks(sensor.address, rr_detected)
                     if rr_detected:
-                        hr = math.get_hr()
-                        self.hrValuesUpdated.emit(sensor.address, hr)
+                        if self.hrValuesUpdated is not None:
+                            self.hrValuesUpdated(sensor.address, math.get_hr())
             except Exception as err:
                 print(err)
 
@@ -213,3 +199,68 @@ class CallibriController(QObject):
         self.__disconnected_devices.clear()
 
 callibri_controller = CallibriController()
+
+
+# if __name__ == '__main__':
+
+# search sensors
+
+is_scan_ended = False
+founded_sensors = list()
+def on_device_founded(sensors: list[CallibriInfo]):
+    global is_scan_ended
+    global founded_sensors
+    founded_sensors = sensors
+    callibri_controller.foundedDevices = None
+    is_scan_ended = True
+
+callibri_controller.foundedDevices = on_device_founded
+callibri_controller.search_with_result(5, [])
+
+while not is_scan_ended:
+    print("Поиск...")
+    time.sleep(1)
+
+if len(founded_sensors) < 1:
+    print("Девайсы не найдены!")
+
+if len(founded_sensors) > 0:
+
+    # connect and save first sensor
+    current_sensor = founded_sensors[0]
+    print("Подключение к {} ({})".format(current_sensor.Name, current_sensor.Address))
+
+    is_device_connected = False
+    def on_device_connection_state_changed(address, state):
+        global is_device_connected
+        if address==current_sensor.Address and state==ConnectionState.Connected:
+            is_device_connected = True
+
+    callibri_controller.connectionStateChanged = on_device_connection_state_changed
+    callibri_controller.connect_to(info=current_sensor, need_reconnect=True)
+
+    while not is_device_connected:
+        print("Подключение...")
+        time.sleep(0.5)
+
+    print("Connected")
+    # calculate HR for 60 sec
+    def hr_values_updated(address: str, hr: float):
+        if address == current_sensor.Address:
+            print("ЧСС: {}".format(hr))
+
+    def has_rr_picks(address: str, has_picks: bool):
+        if address == current_sensor.Address:
+            print("Помехи: {}".format("Нет" if has_picks else "Есть"))
+
+    callibri_controller.hrValuesUpdated = hr_values_updated
+    callibri_controller.hasRRPicks = has_rr_picks
+    callibri_controller.start_calculations(current_sensor.Address)
+
+    # wait for 60 sec
+    time.sleep(60)
+
+    # cancel all connections
+    callibri_controller.stop_all()
+
+

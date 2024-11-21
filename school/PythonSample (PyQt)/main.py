@@ -72,6 +72,11 @@ class MainScreen(QMainWindow):
         callibri_controller.start_calculations(current_device)
 
     def stop_calc(self):
+        try:
+            callibri_controller.hrValuesUpdated.disconnect()
+            callibri_controller.hasRRPicks.disconnect()
+        except Exception as err:
+            print(err)
         callibri_controller.stop_calculations(callibri_controller.connected_devices[0])
 
 app = QApplication(sys.argv)

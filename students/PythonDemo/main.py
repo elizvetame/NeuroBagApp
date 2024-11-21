@@ -2,7 +2,7 @@ import sys
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QStackedWidget, QWidget
 from PyQt6.uic import loadUi
-from brain_bit_controller import brain_bit_controller, BrainBitInfo, ConnectionState, ResistValues
+from brain_bit_controller import brain_bit_controller, BrainBitInfo, ConnectionState, ResistValues, MindDataReal
 
 
 class MainScreen(QMainWindow):
@@ -58,7 +58,7 @@ class MainScreen(QMainWindow):
     def connect_to_device(self, item):
         item_number = self.listWidget.row(item)
         item_info=self.__founded_sensors[item_number]
-        def on_device_connected(address, state):
+        def on_device_connected(address: str, state: ConnectionState):
             item.setText(item_info.Name + ' (' + item_info.Address + '): ' + state.name)
             if address==item_info.Address and state==ConnectionState.Connected:
                 self.startResistButton.setVisible(True)
@@ -80,10 +80,11 @@ class MainScreen(QMainWindow):
     def start_resist(self):
         current_bb=brain_bit_controller.connected_devices[0]
         def on_resist_received(addr, resist_states: ResistValues):
-            self.o1Value.setText(resist_states.O1.name)
-            self.o2Value.setText(resist_states.O2.name)
-            self.t3Value.setText(resist_states.T3.name)
-            self.t4Value.setText(resist_states.T4.name)
+            if addr == current_bb:
+                self.o1Value.setText(resist_states.O1.name)
+                self.o2Value.setText(resist_states.O2.name)
+                self.t3Value.setText(resist_states.T3.name)
+                self.t4Value.setText(resist_states.T4.name)
 
 
         brain_bit_controller.resistValuesUpdated.connect(on_resist_received)
@@ -108,22 +109,32 @@ class MainScreen(QMainWindow):
 
 
     def start_calc(self):
-        def is_artefacted(address, artefacted):
-            self.artefactLabel.setText("Есть" if artefacted else "Нет")
+        current_bb = brain_bit_controller.connected_devices[0]
+        def is_artefacted(address: str, artefacted: bool):
+            if address == current_bb:
+                self.artefactLabel.setText("Есть" if artefacted else "Нет")
 
-        def calibration_progress_changed(address, progress):
-            self.calibrationProgress.setValue(progress)
+        def calibration_progress_changed(address: str, progress: int):
+            if address == current_bb:
+                self.calibrationProgress.setValue(progress)
 
-        def mind_data_changed(address, mind_data):
-            self.relaxLabel.setText("{}".format(mind_data.relaxation))
-            self.attentionLabel.setText("{}".format(mind_data.attention))
+        def mind_data_changed(address: str, mind_data: MindDataReal):
+            if address == current_bb:
+                self.relaxLabel.setText("{}".format(mind_data.relaxation))
+                self.attentionLabel.setText("{}".format(mind_data.attention))
 
         brain_bit_controller.isArtefacted.connect(is_artefacted)
         brain_bit_controller.calibrationProcessChanged.connect(calibration_progress_changed)
         brain_bit_controller.mindDataUpdated.connect(mind_data_changed)
-        brain_bit_controller.start_calculations(brain_bit_controller.connected_devices[0])
+        brain_bit_controller.start_calculations(current_bb)
 
     def stop_calc(self):
+        try:
+            brain_bit_controller.isArtefacted.disconnect()
+            brain_bit_controller.calibrationProcessChanged.disconnect()
+            brain_bit_controller.mindDataUpdated.disconnect()
+        except Exception as err:
+            print(err)
         brain_bit_controller.stop_calculations(brain_bit_controller.connected_devices[0])
 
 app = QApplication(sys.argv)
