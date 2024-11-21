@@ -70,7 +70,6 @@ class MainScreenViewModel @Inject constructor (private val adapter: CallibriAdap
     }
 
     fun connect(info: CallibriInfo){
-        _selectedDevice = info.address
         _scope.launch {
             adapter.connectTo(info, true)
             _allDevicesState.emit(adapter.connectedDevices.toList())
