@@ -201,66 +201,66 @@ class CallibriController:
 callibri_controller = CallibriController()
 
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
 
-# search sensors
-
-is_scan_ended = False
-founded_sensors = list()
-def on_device_founded(sensors: list[CallibriInfo]):
-    global is_scan_ended
-    global founded_sensors
-    founded_sensors = sensors
-    callibri_controller.foundedDevices = None
-    is_scan_ended = True
-
-callibri_controller.foundedDevices = on_device_founded
-callibri_controller.search_with_result(5, [])
-
-while not is_scan_ended:
-    print("Поиск...")
-    time.sleep(1)
-
-if len(founded_sensors) < 1:
-    print("Девайсы не найдены!")
-
-if len(founded_sensors) > 0:
-
-    # connect and save first sensor
-    current_sensor = founded_sensors[0]
-    print("Подключение к {} ({})".format(current_sensor.Name, current_sensor.Address))
-
-    is_device_connected = False
-    def on_device_connection_state_changed(address, state):
-        global is_device_connected
-        if address==current_sensor.Address and state==ConnectionState.Connected:
-            is_device_connected = True
-
-    callibri_controller.connectionStateChanged = on_device_connection_state_changed
-    callibri_controller.connect_to(info=current_sensor, need_reconnect=True)
-
-    while not is_device_connected:
-        print("Подключение...")
-        time.sleep(0.5)
-
-    print("Connected")
-    # calculate HR for 60 sec
-    def hr_values_updated(address: str, hr: float):
-        if address == current_sensor.Address:
-            print("ЧСС: {}".format(hr))
-
-    def has_rr_picks(address: str, has_picks: bool):
-        if address == current_sensor.Address:
-            print("Помехи: {}".format("Нет" if has_picks else "Есть"))
-
-    callibri_controller.hrValuesUpdated = hr_values_updated
-    callibri_controller.hasRRPicks = has_rr_picks
-    callibri_controller.start_calculations(current_sensor.Address)
-
-    # wait for 60 sec
-    time.sleep(60)
-
-    # cancel all connections
-    callibri_controller.stop_all()
+    # search sensors
+    
+    is_scan_ended = False
+    founded_sensors = list()
+    def on_device_founded(sensors: list[CallibriInfo]):
+        global is_scan_ended
+        global founded_sensors
+        founded_sensors = sensors
+        callibri_controller.foundedDevices = None
+        is_scan_ended = True
+    
+    callibri_controller.foundedDevices = on_device_founded
+    callibri_controller.search_with_result(5, [])
+    
+    while not is_scan_ended:
+        print("Поиск...")
+        time.sleep(1)
+    
+    if len(founded_sensors) < 1:
+        print("Девайсы не найдены!")
+    
+    if len(founded_sensors) > 0:
+    
+        # connect and save first sensor
+        current_sensor = founded_sensors[0]
+        print("Подключение к {} ({})".format(current_sensor.Name, current_sensor.Address))
+    
+        is_device_connected = False
+        def on_device_connection_state_changed(address, state):
+            global is_device_connected
+            if address==current_sensor.Address and state==ConnectionState.Connected:
+                is_device_connected = True
+    
+        callibri_controller.connectionStateChanged = on_device_connection_state_changed
+        callibri_controller.connect_to(info=current_sensor, need_reconnect=True)
+    
+        while not is_device_connected:
+            print("Подключение...")
+            time.sleep(0.5)
+    
+        print("Connected")
+        # calculate HR for 60 sec
+        def hr_values_updated(address: str, hr: float):
+            if address == current_sensor.Address:
+                print("ЧСС: {}".format(hr))
+    
+        def has_rr_picks(address: str, has_picks: bool):
+            if address == current_sensor.Address:
+                print("Помехи: {}".format("Нет" if has_picks else "Есть"))
+    
+        callibri_controller.hrValuesUpdated = hr_values_updated
+        callibri_controller.hasRRPicks = has_rr_picks
+        callibri_controller.start_calculations(current_sensor.Address)
+    
+        # wait for 60 sec
+        time.sleep(60)
+    
+        # cancel all connections
+        callibri_controller.stop_all()
 
 

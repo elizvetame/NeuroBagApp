@@ -151,7 +151,7 @@ pip install PyQt6
     # здесь происходит подпись на сигналы
 
     selected_BB_address = # сохраненный адрес нужного девайса
-    brain_bit_controller.start_calculations(current_bb) # начало вычислений
+    brain_bit_controller.start_calculations(selected_BB_address) # начало вычислений
     ```
 3. по завершению работы отписаться от ивентов и остановить вычисления
 
