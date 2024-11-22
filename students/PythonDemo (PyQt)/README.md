@@ -14,10 +14,10 @@ pip install PyQt6
 
 Проект состоит из трех файлов:
 1. файл интерфейса [Mainwindow.ui](https://gitlab.com/neurosdk2/cybergarden2024/-/blob/main/students/PythonDemo/ui/MainWindow.ui?ref_type=heads). В нем ничего интересного
-2. Точка входа в приложение [main.py](https://gitlab.com/neurosdk2/cybergarden2024/-/blob/main/students/PythonDemo/main.py?ref_type=heads). В нем же находится описание интерфейса и вывод рассчитанных дначений в интерфейс
-3. самый важный файл [brain_bit_controller.py](https://gitlab.com/neurosdk2/cybergarden2024/-/blob/main/students/PythonDemo/brain_bit_controller.py?ref_type=heads)
+2. Точка входа в приложение [main.py](https://gitlab.com/neurosdk2/cybergarden2024/-/blob/main/students/PynhonDemo%20(PyQt)/main.py?ref_type=heads). В нем же находится описание интерфейса и вывод рассчитанных дначений в интерфейс
+3. самый важный файл [brain_bit_controller.py](https://gitlab.com/neurosdk2/cybergarden2024/-/blob/main/students/PynhonDemo%20(PyQt)/brain_bit_controller.py?ref_type=heads)
 
-**BrainBitController** - это основной класс, на который нужно обратить внимание. В нем происходит все взаимодействие с девайсом BrainBit, а так же получение эмоциональных состояний из дополнитеной библиотеки. Каждый метод ожидает одним из аргументов мак-адрес устройства. Это означает, что объект **BrainBitController** хранит в себе все подключенные подльзователем устройства и различает их по мак-адресу. Все оповещения помимо основной информации так же отправляют мак-адрес устройства, от которого пришло это оповещение. Этот класс должен быть синглтоном, поэтому сразу после имплементации заведена переменная [brain_bit_controller](https://gitlab.com/neurosdk2/cybergarden2024/-/blob/main/students/PythonDemo/brain_bit_controller.py?ref_type=heads#L283), с помощью которой нужно обращаться к контроллеру.
+**BrainBitController** - это основной класс, на который нужно обратить внимание. В нем происходит все взаимодействие с девайсом BrainBit, а так же получение эмоциональных состояний из дополнитеной библиотеки. Каждый метод ожидает одним из аргументов мак-адрес устройства. Это означает, что объект **BrainBitController** хранит в себе все подключенные подльзователем устройства и различает их по мак-адресу. Все оповещения помимо основной информации так же отправляют мак-адрес устройства, от которого пришло это оповещение. Этот класс должен быть синглтоном, поэтому сразу после имплементации заведена переменная [brain_bit_controller](https://gitlab.com/neurosdk2/cybergarden2024/-/blob/main/students/PynhonDemo%20(PyQt)/brain_bit_controller.py?ref_type=heads#L283), с помощью которой нужно обращаться к контроллеру.
 
 #### Поиск устройства
 
